@@ -34,12 +34,7 @@ def reactor_func_esa(vars, t):
 
     ig_volumetric_flow = (1 / (82.0578 * 473.15)) * 1000 # mol / L
     total_flow = f0 + f1 + f2 + f3 + f4 # mol / s
-    # r1 = (2 * k1 * f0  - k1r * f1 * f2) * (ig_volumetric_flow / total_flow) ** 2 # mol / L s
-
-    # c_b = f0start - f0
-    # if c_b == 0:
-    c_b = k_eq
-    # r2 = 2 * k2 * k_eq * (f0**2 * f3 / c_b) * (ig_volumetric_flow / total_flow) ** 2 # mol / L s
+    c_b = k_eq * f0start / 2 # 2 for stoich
     r2 =k2 * (f0**2 * f3) * (ig_volumetric_flow / total_flow)**2 # mol / L s
 
     return np.array([-2*r2, 0, 0, -r2, 2*r2, 0])
@@ -74,7 +69,6 @@ ax.set_title("Flowrate vs Cumulative Volume (PFR): Full Simulation")
 # Solve the equation.
 y = odeint(reactor_func_esa, f0, t)
 
-fig = plt.figure(figsize=(10,10))
 ax = fig.add_subplot(2, 1, 2)
 ax.plot(t, y[:,0], zorder=2)
 ax.plot(t, y[:,1], zorder=2)
@@ -88,14 +82,6 @@ ax.grid(linestyle='-', color='0.7', zorder=0)
 ax.set_xlabel('V [liters]')
 ax.set_ylabel('Flow rate [mol / s]')
 ax.legend(["F_a","F_b", "F_c", "F_d", "F_e"])
-ax.set_title("Flowrate vs Cumulative Volume (PFR): Full Simulation")
+ax.set_title("Flowrate vs Cumulative Volume (PFR): ESA")
 
-
-# ax.plot(t, y[:,6], zorder=2)
-# ax.set_xlabel('V [liters]')
-# ax.set_ylabel('Temp [K]')
-# ax.grid(linestyle='-', color='0.7', zorder=0)
-# ax.set_xlim(0,t_end)
-# ax.set_title('Temp vs Cumulative Volume (PFR)' + temp_subheader)
-# ax.axvspan(0,volume_at_conversion_85, color='0.9')
-# fig.savefig("pfr-flow-vs-vol.png", dpi=288)
+fig.savefig("pfr-flow-vs-vol.png", dpi=288)
