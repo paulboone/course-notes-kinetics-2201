@@ -10,11 +10,11 @@ keq_co3_p = 1.95e10
 keq_hco3_p = 2.46e3
 keq_rnh2_p = 2.24e9
 keq_oh_p = 6.76e13
-keq_rnhcoo = 3.09e7
+keq_rnhcoo = 3.09e6#3.09e7
 
 ## protonation equilibrium rate constant
 ## (arbitrarily high to dwarf other rate constants and create near-instant equilibrium)
-keq = 1e3
+keq = 1e5
 
 def reactor_func(c, t):
     """
@@ -34,7 +34,7 @@ def reactor_func(c, t):
     r6 = keq * (keq_oh_p * oh * h - h2o)
     r7 = 9.16e+2 * h2co3 * rnh2 - 5.14e-3 * rnhcooh
     r8 = 1.05e-3 * hco3 * rnh2 - 7.43e-5 * rnhcoo
-    r9 = 6.11e3 * co2l * rnh2 - 29.8 * rnhcooh
+    r9 = 6.11e3 * co2l * rnh2 - 3*29.8 * rnhcooh
     r10 = keq * (keq_rnhcoo * rnhcoo * h - rnhcooh)
 
     # if h > 0.0 and oh > 0.0:
@@ -51,14 +51,33 @@ def reactor_func(c, t):
 ## Set Initial Concentrations
 ## based on intial concentrations of h2o, rnh2, co2l, we can calculate some initial equilibrium
 ## concentrations. See reaction specification spreadsheet for which index applies to which species.
-h2o0 = 55.5
+# h2o0 = 55.5
+# rnh20 = 0.004
+# co2l0 = 0.006
+# y0 = [0.0, co2l0,
+#       h2o0,1*math.sqrt(h2o0 / keq_oh_p), 1*math.sqrt(h2o0 / keq_oh_p), 0.0, 0.0, 0.0,
+#       rnh20, rnh20 / keq_rnh2_p, 0.0, 0.0]
+
+
+h2o0 = 0
 rnh20 = 0.004
 co2l0 = 0.006
 y0 = [0.0, co2l0,
-      h2o0, math.sqrt(h2o0 / keq_oh_p), math.sqrt(h2o0 / keq_oh_p), 0.0, 0.0, 0.0,
+      h2o0,1*math.sqrt(h2o0 / keq_oh_p), 1*math.sqrt(h2o0 / keq_oh_p), 0.0, 0.0, 0.0,
       rnh20, rnh20 / keq_rnh2_p, 0.0, 0.0]
 
-t_end = 10
+
+# h2o0 = 52.5
+# rnh20 = 3.01
+# co2l0 = 0.0
+# co30 = 1.2
+# h0 = 2.83
+#
+# y0 = [0.0, co2l0,
+#       h2o0,0, h0, 0.0, 0.0, co30,
+#       rnh20, 0.0, 0.0, 0.0]
+
+t_end = 0.2
 num_points = 100
 t = np.linspace(0, t_end, num_points)
 
@@ -89,16 +108,13 @@ ax.set_ylabel('concentration [M]')
 ax.legend(loc='upper right')
 
 ax2 = ax.twinx()
+ax2.set_ylim(6, 11)
+ax2.set_ylabel('pH')
 ph = -np.log10(y[:,4])
-ax2.plot(t, ph, 'b-', zorder=5, label="pH", linewidth=4)
+ax2.plot(t, ph, '--', color='black', zorder=5, label="pH", linewidth=3)
+ax2.legend(loc='center right')
 
 fig.show()
-# conversion_85 = [i for i,yval in enumerate(y) if yval[0] < 0.05*y0[0]]
-# subheader = ""
-# if conversion_85:
-#     time_at_conversion_85 = conversion_85[0] * (t_end / num_points)
-#     subheader = "\nTime at 95%% conversion:  %s seconds" % time_at_conversion_85
-#     ax.axvspan(0,time_at_conversion_85, color='0.9')
 
 # ax.set_title("CTime with Catalyst" + subheader)
 # fig.savefig("conc-vs-time.png", dpi=144)
