@@ -23,7 +23,7 @@ def reactor_func(c, t):
 
     co2g, co2l, h2o, oh, h, h2co3, hco3, co3, rnh2, rnh3, rnhcooh, rnhcoo = c
 
-    r0 = r1 = r2 = r3 = r4 = r5 = r6 = r7 = r8 = r9 = r10 = 0
+    r0 = r1 = r2 = r3 = r4 = r5 = r6 = r7 = r8 = r9 = r10 = r11 = 0
 
     r0 = 0
     r1 = 4.68e-2 * co2l - 40.65 * h2co3
@@ -36,15 +36,18 @@ def reactor_func(c, t):
     r8 = 1.05e-3 * hco3 * rnh2 - 7.43e-5 * rnhcoo
     r9 = 6.11e3 * co2l * rnh2 - 3*29.8 * rnhcooh
     r10 = keq * (keq_rnhcoo * rnhcoo * h - rnhcooh)
+    # r11 = 1e1 * co2l - 1e1 * hco3 * h
+
+    # print(r11)
 
     # if h > 0.0 and oh > 0.0:
     #     print(h, oh, -math.log10(h))
     # print(co2l, h2co3, r1)
     # print(oh, h, h2o, keq_oh_p*oh*h, h2o)
 
-    return np.array([r0, r0 - r1 - r2 - r9,
-                    -r1 + r6 + r7 + r8, -r2 - r6, -r3 - r4 - r5 - r6 - r10,
-                    r1 + r4 - r7, r2 + r3 - r4 - r8, -r3,
+    return np.array([r0, r0 - r1 - r2 - r9 - r11,
+                    -r1 + r6 + r7 + r8 - r11, -r2 - r6, -r3 - r4 - r5 - r6 - r10 + r11,
+                    r1 + r4 - r7, r2 + r3 - r4 - r8 + r11, -r3,
                     -r5 - r7 - r8 - r9, r5, r7 + r9 + r10, r8 - r10])
 
 
@@ -59,11 +62,11 @@ def reactor_func(c, t):
 #       rnh20, rnh20 / keq_rnh2_p, 0.0, 0.0]
 
 
-h2o0 = 0
+h2o0 = 4
 rnh20 = 0.004
 co2l0 = 0.006
 y0 = [0.0, co2l0,
-      h2o0,1*math.sqrt(h2o0 / keq_oh_p), 0.000, 0.0, 0.0, 0.0,
+      h2o0,1*math.sqrt(h2o0 / keq_oh_p), 1*math.sqrt(h2o0 / keq_oh_p), 0.0, 0.0, 0.0,
       rnh20, rnh20 / keq_rnh2_p, 0.0, 0.0]
 
 
@@ -77,7 +80,7 @@ y0 = [0.0, co2l0,
 #       h2o0,0, h0, 0.0, 0.0, co30,
 #       rnh20, 0.0, 0.0, 0.0]
 
-t_end = 35
+t_end = 0.2
 num_points = 100
 t = np.linspace(0, t_end, num_points)
 
@@ -117,5 +120,5 @@ ax2.legend(loc='center right')
 
 fig.show()
 
-ax.set_title("4 mM MEA + 6 mM CO2(l) to 35s")
-fig.savefig("4mM-MEA_6mM-CO2_35s.png", dpi=144)
+ax.set_title("4 mM MEA + 6 mM CO2(l) to 0.2s")
+fig.savefig("4mM-MEA_6mM-CO2_02s.png", dpi=144)
