@@ -14,7 +14,7 @@ keq_rnhcoo = 3.09e6#3.09e7
 
 ## protonation equilibrium rate constant
 ## (arbitrarily high to dwarf other rate constants and create near-instant equilibrium)
-keq = 1e5
+keq = 1e3
 
 def reactor_func(c, t):
     """
@@ -63,7 +63,7 @@ h2o0 = 0
 rnh20 = 0.004
 co2l0 = 0.006
 y0 = [0.0, co2l0,
-      h2o0,1*math.sqrt(h2o0 / keq_oh_p), 1*math.sqrt(h2o0 / keq_oh_p), 0.0, 0.0, 0.0,
+      h2o0,1*math.sqrt(h2o0 / keq_oh_p), 0.000, 0.0, 0.0, 0.0,
       rnh20, rnh20 / keq_rnh2_p, 0.0, 0.0]
 
 
@@ -77,7 +77,7 @@ y0 = [0.0, co2l0,
 #       h2o0,0, h0, 0.0, 0.0, co30,
 #       rnh20, 0.0, 0.0, 0.0]
 
-t_end = 0.2
+t_end = 35
 num_points = 100
 t = np.linspace(0, t_end, num_points)
 
@@ -89,18 +89,19 @@ print(matplotlib.style.available)
 # matplotlib.style.use("v2.0")
 fig = plt.figure(figsize=(7,7))
 ax = fig.add_subplot(1, 1, 1)
-ax.plot(t, y[:,0], zorder=2, label="CO2(g)")
+# ax.plot(t, y[:,0], zorder=2, label="CO2(g)")
 ax.plot(t, y[:,1], zorder=10, label="CO2(l)")
-# ax.plot(t, y[:,2], zorder=2, label="H2O")
-ax.plot(t, y[:,3], zorder=2, label="OH-")
-ax.plot(t, y[:,4], zorder=2, label="H+")
+ax.plot(t, y[:,2], zorder=2, label="H2O")
+# ax.plot(t, y[:,3], zorder=2, label="OH-")
+# ax.plot(t, y[:,4], zorder=2, label="H+")
 ax.plot(t, y[:,5], zorder=2, label="H2CO3")
 ax.plot(t, y[:,6], zorder=2, label="HCO3-")
-ax.plot(t, y[:,7], zorder=2, label="CO3(2-)")
+# ax.plot(t, y[:,7], zorder=2, label="CO3(2-)")
 ax.plot(t, y[:,8], zorder=9, label="RNH2")
 ax.plot(t, y[:,9], zorder=2, label="RNH3+")
-ax.plot(t, y[:,10], zorder=2, label="RNHCOOH")
+# ax.plot(t, y[:,10], zorder=2, label="RNHCOOH")
 ax.plot(t, y[:,11], zorder=2, label="RNHCOO-")
+ax.set_ylim(0,0.006)
 ax.set_xlim(0,t_end)
 ax.grid(linestyle='-', color='0.7', zorder=0)
 ax.set_xlabel('t [seconds]')
@@ -116,5 +117,5 @@ ax2.legend(loc='center right')
 
 fig.show()
 
-# ax.set_title("CTime with Catalyst" + subheader)
-# fig.savefig("conc-vs-time.png", dpi=144)
+ax.set_title("4 mM MEA + 6 mM CO2(l) to 35s")
+fig.savefig("4mM-MEA_6mM-CO2_35s.png", dpi=144)
