@@ -16,20 +16,23 @@ const_r = 0.082057 # L atm K−1 mol−1
 const_r_J = 8.314 # J / mol K
 c_h = 0.01692573879495781 / 2.0
 
-k_f = 1e3
-k_b = 1e3
+k_f = 1e-5
+k_b = 1e-7
 
 dG = -76200 # J / mol
-e_a_diff = dG + const_r_J * 298.15 * math.log(k_f / k_b)
+e_a_diff = dG + const_r_J * 830.1 * math.log(k_f / k_b)
 e_a_diff
-e_a_f = 5000 # J / mol
+e_a_f = 10000 # J / mol
 e_a_b = e_a_f - e_a_diff
 e_a_b
 
-desired_conversion = 0.5
+desired_conversion = 0.1
 
 temps = np.linspace(360, 1000, 641)
-y = np.exp(-(-118.78 / (const_r_J * temps) + 0.14294  / const_r_J))
+y = np.exp(-(-118780 / (const_r_J * temps) + 142.94 / const_r_J))
+np.isfinite(temps)
+
+
 
 fig1 = plt.figure(figsize=(7,7))
 ax = fig1.add_subplot(1, 1, 1)
@@ -37,6 +40,9 @@ ax.plot(temps, y, zorder=2)
 ax.set_xlabel('temp [K]')
 ax.set_ylabel('K_eq')
 ax.grid(linestyle='-', color='0.7', zorder=0)
+ax.set_ylim(0.1,100)
+ax.set_yscale('log')
+
 # fig.savefig("conc-vs-time.png", dpi=288)
 
 
@@ -49,19 +55,21 @@ def reactor_func(vars, t):
         Define the right-hand side of equation dy/dt = a*y
     """
     f0, f1, f2, temp, temp_hx = vars
-    k1 = 1
-    # k1 = 1 * np.exp(-50000 / (8.31451 * temp))
+
+
+    k1 = k_f * np.exp(-(-118780 / (const_r_J * temp) + 142.94 / const_r_J))
+    k2 = k_b * np.exp(-(118780 / (const_r_J * temp) - 142.94 / const_r_J))
 
     total_flow = f0 + f1 + f2  # mol / s
     ig_volumetric_flow = pressure / (const_r * temp) # mol / L
-    r1 = k1 * f0 * f1 * (ig_volumetric_flow / total_flow) ** 2 # mol / L s
+    r1 = (k1 * f0 * f1  - k2 * f2) * (ig_volumetric_flow / total_flow) ** 2  # mol / L s
 
     dTdV = 0 #(30000 * r1  + 34000 * r2 - ua_v * (temp - temp_hx)) / ((f0 + f1 + f2 + f3 + f4 + f5) * cp_f)
     dTedVs = 0 # ua_v * (temp - temp_hx) / (f_hx * cp_hx)
     return np.array([-r1, -r1, r1, dTdV, dTedVs])
 
 # Initial concentrations
-f0 = [c_h, c_h, 0, 360.00, 463.15]
+f0 = [c_h, c_h, 0, 460.00, 463.15]
 
 t_end = 20
 num_points = 100
