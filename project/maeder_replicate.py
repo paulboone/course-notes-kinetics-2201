@@ -39,7 +39,7 @@ def reactor_func(c, t):
     # r9 = 6.11e3 * co2l * rnh2 - 3*29.8 * rnhcooh # maeder 2009
     r9 = 7.6e3 * co2l * rnh2 - 193 * rnhcooh # maeder 2011
     r10 = keq * (keq_rnhcoo * rnhcoo * h - rnhcooh)
-    # r11 = 1e1 * co2l - 1e1 * hco3 * h
+    r11 = 10 * (co2l - hco3 * h / 4.47E-07)
 
     # print(r11)
 
@@ -110,8 +110,11 @@ y0 = [0.0, co2l0,
 #       h2o0,0, h0, 0.0, 0.0, co30,
 #       rnh20, 0.0, 0.0, 0.0]
 
+
+
+
 t_end = 0.2
-num_points = 100000
+num_points = 10000
 t = np.linspace(0, t_end, num_points)
 
 # Solve the equation.
@@ -126,15 +129,14 @@ ax.plot(t, y[:,9], zorder=2, label="RNH3+")
 ax.plot(t, y[:,11], zorder=2, label="RNHCOO-")
 ax.plot(t, y[:,6], zorder=2, label="HCO3-")
 ax.plot(t, y[:,1], zorder=10, label="CO2(l)")
+ax.plot(t, y[:,8], zorder=9, label="RNH2")
+ax.plot(t, y[:,10], zorder=2, label="RNHCOOH")
+
 # ax.plot(t, y[:,2], zorder=2, label="H2O")
 # ax.plot(t, y[:,3], zorder=2, label="OH-")
 # ax.plot(t, y[:,4], zorder=2, label="H+")
 # ax.plot(t, y[:,5], zorder=2, label="H2CO3")
-
 # ax.plot(t, y[:,7], zorder=2, label="CO3(2-)")
-ax.plot(t, y[:,8], zorder=9, label="RNH2")
-
-ax.plot(t, y[:,10], zorder=2, label="RNHCOOH")
 
 ax.set_ylim(0,max(rnh20, co2l0))
 ax.set_xlim(0,t_end)
@@ -151,6 +153,6 @@ ax2.plot(t, ph, '--', color='black', zorder=5, label="pH", linewidth=3)
 ax2.legend(loc='center right')
 # ax.set_title("4 mM MEA + 6 mM CO2(l) to 0.2s")
 
-# fig.show()
+fig.show()
 
-fig.savefig("4mM-MEA_6mM-CO2_02s_Kwx10.png", dpi=144)
+fig.savefig("4mM-MEA_6mM-CO2_0.2s_ca10.png", dpi=144)
