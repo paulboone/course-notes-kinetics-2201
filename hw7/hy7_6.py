@@ -5,13 +5,8 @@ import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
-
-ua_v = 50
-cp_f = 60
-f_hx = 10
-cp_hx = 7
-
-pressure = 1 # atm
+pressure0 = 1 # atm
+temp0 = 360.0
 const_r = 0.082057 # L atm K−1 mol−1
 const_r_J = 8.314 # J / mol K
 c_h = 0.01692573879495781 / 2.0
@@ -51,16 +46,18 @@ y = np.exp(-(-118780 / (const_r_J * temps) + 142.94 / const_r_J))
 # t_opt
 
 
-ua_v = 50
-cp_f = 14.31 # hydrogen at 300 K
-f_hx = 10
-cp_hx = 7
+ua_v = 50 # J / L s K rough low estimate for gas inside tube, liquid outside from https://www.engineersedge.com/thermodynamics/overall_heat_transfer-table.htm
+cp_f = 148.64 # J/mol*K cyclohexane at 400K
+f_hx = 1
+cp_hx = 70
+
+
 
 def reactor_func(vars, t):
     """
         Define the right-hand side of equation dy/dt = a*y
     """
-    f0, f1, f2, temp, temp_hx = vars
+    f0, f1, f2, temp, temp_hx, pressure = vars
 
 
     k1 = k_f * np.exp(-e_a_f / (const_r_J * temp))
@@ -71,17 +68,30 @@ def reactor_func(vars, t):
 
     total_flow = f0 + f1 + f2  # mol / s
     ig_volumetric_flow = pressure / (const_r * temp) # mol / L
-    r1 = (k1 * f0 * f1  - k2 * f2) * (ig_volumetric_flow / total_flow) ** 2  # mol / L s
+    # r1 = (k1 * f0 * f1  - k2 * f2) * (ig_volumetric_flow / total_flow) ** 2  # mol / L s
 
-    dTdV = (-dH * r1) # - ua_v * (temp - temp_hx)) / (total_flow * cp_f)
-    dTedVs = 0 # ua_v * (temp - temp_hx) / (f_hx * cp_hx)
-    return np.array([-r1, -r1, r1, dTdV, dTedVs])
+    ka = 2 # L / mole
+    kb = 2 # L / mole
+    pa = pressure * f0 / total_flow # mole / L
+    pb = pressure * f1 / total_flow # mole / L
+    krxn = 1e1
+
+    beta0=6670 #       %Ergun parameter - calculated separately
+    Ar=1.14e-3 #      %Tube cross section in m2
+
+
+    r1 = krxn * ka*pa*kb*pb / (1 + ka*pa + kb*pb)
+
+    dTdV = ((-dH * r1) - ua_v * (temp - temp_hx)) / (total_flow * cp_f)
+    dTedVs = ua_v * (temp - temp_hx) / (f_hx * cp_hx)
+    dPdz = 0 # -beta0 * (pressure0 / pressure) * (temp / temp0) * (total_flow / (c_h + c_h))
+    return np.array([-r1, -r1, r1, dTdV, dTedVs, dPdz])
 
 # Initial concentrations
-f0 = [c_h, c_h, 0, 360.00, 463.15]
+f0 = [c_h, c_h, 0, temp0,  400.00, pressure0]
 
-t_end = 10
-num_points = 100
+t_end = 1
+num_points = 10000
 t = np.linspace(0, t_end, num_points)
 
 # Solve the equation.

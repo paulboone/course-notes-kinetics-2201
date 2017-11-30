@@ -5,12 +5,6 @@ import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
-
-ua_v = 50
-cp_f = 60
-f_hx = 10
-cp_hx = 7
-
 pressure = 1 # atm
 const_r = 0.082057 # L atm K−1 mol−1
 const_r_J = 8.314 # J / mol K
@@ -51,10 +45,10 @@ y = np.exp(-(-118780 / (const_r_J * temps) + 142.94 / const_r_J))
 # t_opt
 
 
-ua_v = 50
-cp_f = 14.31 # hydrogen at 300 K
-f_hx = 10
-cp_hx = 7
+ua_v = 50 # J / L s K rough low estimate for gas inside tube, liquid outside from https://www.engineersedge.com/thermodynamics/overall_heat_transfer-table.htm
+cp_f = 148.64 # J/mol*K cyclohexane at 400K
+f_hx = 1
+cp_hx = 70
 
 def reactor_func(vars, t):
     """
@@ -73,12 +67,12 @@ def reactor_func(vars, t):
     ig_volumetric_flow = pressure / (const_r * temp) # mol / L
     r1 = (k1 * f0 * f1  - k2 * f2) * (ig_volumetric_flow / total_flow) ** 2  # mol / L s
 
-    dTdV = (-dH * r1) # - ua_v * (temp - temp_hx)) / (total_flow * cp_f)
-    dTedVs = 0 # ua_v * (temp - temp_hx) / (f_hx * cp_hx)
+    dTdV = ((-dH * r1) - ua_v * (temp - temp_hx)) / (total_flow * cp_f)
+    dTedVs = ua_v * (temp - temp_hx) / (f_hx * cp_hx)
     return np.array([-r1, -r1, r1, dTdV, dTedVs])
 
 # Initial concentrations
-f0 = [c_h, c_h, 0, 360.00, 463.15]
+f0 = [c_h, c_h, 0, 360.00, 400.00]
 
 t_end = 10
 num_points = 100
