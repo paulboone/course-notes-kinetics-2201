@@ -5,7 +5,7 @@ import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
-pressure0 = 1 # atm
+pressure0 = 10 # atm
 temp0 = 360.0
 const_r = 0.082057 # L atm K−1 mol−1
 const_r_J = 8.314 # J / mol K
@@ -74,30 +74,30 @@ def reactor_func(vars, t):
     kb = 2 # L / mole
     pa = pressure * f0 / total_flow # mole / L
     pb = pressure * f1 / total_flow # mole / L
-    krxn = 1e1
+    krxn = 5e-2
 
-    beta0=6670 #       %Ergun parameter - calculated separately
-    Ar=1.14e-3 #      %Tube cross section in m2
-
+    beta0=1 #       %Ergun parameter - calculated separately
+    # Ar=1.14e-3 #      %Tube cross section in m2
 
     r1 = krxn * ka*pa*kb*pb / (1 + ka*pa + kb*pb)
 
     dTdV = ((-dH * r1) - ua_v * (temp - temp_hx)) / (total_flow * cp_f)
     dTedVs = ua_v * (temp - temp_hx) / (f_hx * cp_hx)
-    dPdz = 0 # -beta0 * (pressure0 / pressure) * (temp / temp0) * (total_flow / (c_h + c_h))
+    dPdz = -beta0 * (pressure0 / pressure) * (temp / temp0) * (total_flow / (c_h + c_h))
+    # print(dPdz, pressure0, pressure, temp0, temp, c_h * 2, total_flow)
     return np.array([-r1, -r1, r1, dTdV, dTedVs, dPdz])
 
 # Initial concentrations
 f0 = [c_h, c_h, 0, temp0,  400.00, pressure0]
 
 t_end = 1
-num_points = 10000
+num_points = 1000
 t = np.linspace(0, t_end, num_points)
 
 # Solve the equation.
 y = odeint(reactor_func, f0, t)
 
-fig = plt.figure(figsize=(10,5))
+fig = plt.figure(figsize=(11,5))
 ax = fig.add_subplot(1, 2, 1)
 ax.plot(t, y[:,0], zorder=2, label="F Cyclohexene")
 ax.plot(t, y[:,1], zorder=2, label="H2")
@@ -118,29 +118,26 @@ ax2.set_ylim(300, 900)
 ax2.set_ylabel('Temp')
 ax2.legend(loc='right')
 
+# ax3 = ax.twinx()
+# ax2.plot(t, y[:,5], zorder=2, label='Pressure', color='grey')
+
 conversion_xx = [i for i,yval in enumerate(y) if yval[0] < (1 - desired_conversion) * f0[0]]
 subheader = ""
 temp_subheader = ""
 if conversion_xx:
     volume_at_conversion_xx = conversion_xx[0] * (t_end / num_points)
     temp_at_conversion_xx = y[conversion_xx[0],3]
-    subheader = "\nVolume at %2.0f%% conversion:  %2.1f L" % (desired_conversion * 100, volume_at_conversion_xx)
-    temp_subheader = "\nTemp at %2.0f%% conversion:  %2.1f K" % (desired_conversion * 100, temp_at_conversion_xx)
+    subheader = "\nVolume at %2.0f%% conversion:  %2.3f L" % (desired_conversion * 100, volume_at_conversion_xx)
+    temp_subheader = "\nTemp at %2.0f%% conversion:  %2.3f K" % (desired_conversion * 100, temp_at_conversion_xx)
     ax.axvspan(0,volume_at_conversion_xx, color='0.9')
 
 ax.set_title("Flowrate vs Cumulative Volume (PFR)" + subheader)
 
 
-# ax = fig.add_subplot(1, 2, 2)
-# ax.plot(t, y[:,6], zorder=2)
-# ax.plot(t, y[:,7], zorder=2)
-# ax.legend(["T reactor", "T HX"])
-# ax.set_xlabel('V [liters]')
-# ax.set_ylabel('Temp [K]')
-# ax.grid(linestyle='-', color='0.7', zorder=0)
-# ax.set_xlim(0,t_end)
-# ax.set_ylim(450, 700)
-# temp_subheader = "\nUA/V = %2.1f" % ua_v
-# ax.set_title('Temp vs Cumulative Volume (PFR)' + temp_subheader)
-# ax.axhspan(450,673.15, color='0.9')
+ax = fig.add_subplot(1, 2, 2)
+fig.subplots_adjust(wspace=0.4, hspace=0.4)
+ax.plot(t, y[:,5], zorder=2)
+ax.set_xlabel('V [liters]')
+ax.set_ylabel('Pressure')
+
 fig.savefig("pfr-flow-vs-vol.png", dpi=288)
